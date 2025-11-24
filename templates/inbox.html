@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block head %}
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your Secure Inbox</title>
+<style>
+	body {
+		font-family: system-ui, sans-serif;
+		background: #f4f6f9;
+		padding: 2rem;
+		margin: 0;
+	}
+
+	.container {
+		max-width: 1000px;
+		margin: 0 auto;
+	}
+
+	h1 {
+		color: #1a1a1a;
+		margin-bottom: 0.5rem;
+	}
+
+	.key-upload-box {
+		background: white;
+		padding: 1.5rem;
+		border-radius: 12px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+		margin-bottom: 2rem;
+		text-align: center;
+		border: 2px dashed #ccc;
+	}
+
+	.key-upload-box.dragover {
+		border-color: #4a6fe2;
+		background: #e3f2fd;
+	}
+
+	input[type="file"] {
+		margin: 1rem 0;
+	}
+
+	button {
+		background: #4a6fe2;
+		color: white;
+		border: none;
+		padding: 0.8rem 1.8rem;
+		border-radius: 8px;
+		cursor: pointer;
+		font-size: 1rem;
+		margin-top: 0.5rem;
+	}
+
+	button:disabled {
+		background: #aaa;
+		cursor: not-allowed;
+	}
+
+	.file-card {
+		background: white;
+		border-radius: 12px;
+		padding: 1.5rem;
+		margin: 1rem 0;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+		border-left: 5px solid #4a6fe2;
+	}
+
+	.file-card.error {
+		border-left-color: #d32f2f;
+	}
+
+	.meta {
+		color: #666;
+		font-size: 0.9rem;
+		margin: 0.5rem 0;
+	}
+
+	.actions {
+		margin-top: 1rem;
+	}
+
+	.loading,
+	.error-msg {
+		padding: 1rem;
+		border-radius: 8px;
+		margin: 1rem 0;
+	}
+
+	.loading {
+		background: #e8f5e9;
+		color: #2e7d32;
+	}
+
+	.error-msg {
+		background: #ffebee;
+		color: #d32f2f;
+	}
+</style>
+{% endblock %}
+{% block content %}
+<div class="container">
+	<h1>Your Secure Inbox</h1>
+	<p>Upload your <strong>private key</strong> to decrypt messages sent to you (AES-GCM + RSA-OAEP).</p>
+
+	<div class="key-upload-box" id="drop-zone">
+		<p><strong>Upload your private key file</strong> (.pem, .key)</p>
+		<input type="file" id="private-key-input" accept=".pem,.key,text/plain" />
+		<p>Or drag & drop it here</p>
+		<button id="decrypt-btn" disabled>Decrypt Inbox</button>
+		<div id="key-status" style="margin-top: 10px; font-weight: bold;"></div>
+	</div>
+
+	<div id="inbox-content">
+		<div class="loading">Waiting for private key...</div>
+	</div>
+</div>
+
+<script>
+	// === VARIABLE DECLARATIONS ===
+	let privateKey = null;
+	const privateKeyInput = document.getElementById('private-key-input');
+	const decryptBtn = document.getElementById('decrypt-btn');
+	const inboxContent = document.getElementById('inbox-content');
+	const dropZone = document.getElementById('drop-zone');
+	const keyStatus = document.getElementById('key-status');
+
+	// === HELPER FUNCTIONS ===
+	function base64ToArrayBuffer(base64) {
+		const binary = atob(base64);
+		return Uint8Array.from(binary, c => c.charCodeAt(0)).buffer;
+	}
+
+	async function importPrivateKey(pem) {
+		const pemContents = pem
+			.replace(/-----BEGIN[\w\s]+-----/g, '')
+			.replace(/-----END[\w\s]+-----/g, '')
+			.replace(/\s+/g, '');
+		const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+		return await crypto.subtle.importKey(
+			"pkcs8",
+			binaryDer.buffer,
+			{name: "RSA-OAEP", hash: "SHA-256"},
+			false,
+			["decrypt"]
+		);
+	}
+
+	async function decryptFile(encryptedB64, wrappedKeyB64, nonceB64) {
+		const ciphertext = base64ToArrayBuffer(encryptedB64);
+		const wrappedKey = base64ToArrayBuffer(wrappedKeyB64);
+		const nonce = base64ToArrayBuffer(nonceB64);
+
+		// Step 1: Decrypt the AES-GCM key using recipient's private key
+		const rawAesKey = await crypto.subtle.decrypt(
+			{name: "RSA-OAEP"},
+			privateKey,
+			wrappedKey
+		);
+
+		// Step 2: Import the AES-GCM key
+		const aesKey = await crypto.subtle.importKey(
+			"raw",
+			rawAesKey,
+			{name: "AES-GCM"},
+			false,
+			["decrypt"]
+		);
+
+		// Step 3: Decrypt the file
+		const plaintext = await crypto.subtle.decrypt(
+			{name: "AES-GCM", iv: nonce},
+			aesKey,
+			ciphertext
+		);
+
+		return new Blob([plaintext]);
+	}
+
+	function escape(str) {
+		const div = document.createElement('div');
+		div.textContent = str;
+		return div.innerHTML;
+	}
+
+	// === PRIVATE KEY FILE INPUT HANDLER ===
+	privateKeyInput.addEventListener('change', async (e) => {
+		const file = e.target.files[0];
+		if (!file) return;
+		
+		try {
+			const text = await file.text();
+			privateKey = await importPrivateKey(text);
+			keyStatus.textContent = '✓ Private key loaded successfully';
+			keyStatus.style.color = '#2e7d32';
+			decryptBtn.disabled = false;
+		} catch (err) {
+			console.error('Failed to load private key:', err);
+			keyStatus.textContent = '✗ Invalid private key file';
+			keyStatus.style.color = '#d32f2f';
+			decryptBtn.disabled = true;
+			privateKey = null;
+		}
+	});
+
+	// === DRAG AND DROP HANDLERS ===
+	dropZone.addEventListener('dragover', (e) => {
+		e.preventDefault();
+		dropZone.classList.add('dragover');
+	});
+
+	dropZone.addEventListener('dragleave', () => {
+		dropZone.classList.remove('dragover');
+	});
+
+	dropZone.addEventListener('drop', async (e) => {
+		e.preventDefault();
+		dropZone.classList.remove('dragover');
+		
+		const file = e.dataTransfer.files[0];
+		if (!file) return;
+		
+		try {
+			const text = await file.text();
+			privateKey = await importPrivateKey(text);
+			keyStatus.textContent = '✓ Private key loaded successfully';
+			keyStatus.style.color = '#2e7d32';
+			decryptBtn.disabled = false;
+		} catch (err) {
+			console.error('Failed to load private key:', err);
+			keyStatus.textContent = '✗ Invalid private key file';
+			keyStatus.style.color = '#d32f2f';
+			decryptBtn.disabled = true;
+			privateKey = null;
+		}
+	});
+
+	// === DECRYPT BUTTON ===
+	decryptBtn.addEventListener('click', async () => {
+		if (!privateKey) return alert("Private key not loaded");
+
+		inboxContent.innerHTML = '<div class="loading">Decrypting your files...</div>';
+
+		try {
+			const res = await fetch("/check_files");
+			const data = await res.json();
+
+			if (!data.success || data.files.length === 0) {
+				inboxContent.innerHTML = "<p>No messages yet.</p>";
+				return;
+			}
+
+			let html = "<h2>Your Files</h2>";
+
+			for (const file of data.files) {
+				try {
+					// Fetch encrypted file content
+					const fileRes = await fetch(`/get_encrypted_file/${file.stored_file}`);
+					const fileData = await fileRes.json();
+					if (!fileData.success) throw new Error("Failed to download file");
+
+					// Decrypt using correct fields
+					const blob = await decryptFile(
+						fileData.encrypted_data,
+						file.wrapped_key_for_recipient,
+						file.nonce
+					);
+
+					const url = URL.createObjectURL(blob);
+					const date = new Date(file.uploaded_at).toLocaleString();
+
+					html += `
+					<div class="file-card">
+						<h3>${escape(file.filename)}</h3>
+						<div class="meta">From: <strong>${escape(file.sender)}</strong> • ${date}</div>
+						<div class="actions">
+							<a href="${url}" download="${file.filename}">
+								<button>Download ${file.filename}</button>
+							</a>
+						</div>
+					</div>`;
+				} catch (err) {
+					console.error("Decryption failed for:", file.filename, err);
+					html += `
+					<div class="file-card error">
+						<h3>${escape(file.filename)}</h3>
+						<div class="meta">From: ${escape(file.sender)}</div>
+						<p style="color:#d32f2f;">Failed to decrypt (wrong private key?)</p>
+					</div>`;
+				}
+			}
+
+			inboxContent.innerHTML = html;
+
+		} catch (err) {
+			inboxContent.innerHTML = `<div class="error-msg">Error: ${err.message}</div>`;
+		}
+	});
+</script>
+{% endblock %}

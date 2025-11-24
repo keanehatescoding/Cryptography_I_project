@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Error 404 Page{% endblock %}
+{% block content %}
+<h1>
+	Oops! The page you're looking for seems to have vanished into the digital void.
+</h1>
+<a href="{{ url_for('index') }}">Back to Dashboard</a>
+{% endblock %}

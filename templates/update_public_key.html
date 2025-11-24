@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Update Public Key{% endblock %}
+{% block head %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 class="text-center text-3xl font-bold text-gray-900">
+            Update Public Key
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            Replace your existing public key for secure messaging
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border border-gray-200">
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-6">
+                        {% for category, message in messages %}
+                            <div class="rounded-md p-4 mb-3 {% if category == 'error' %}bg-red-50 border border-red-200 text-red-800{% else %}bg-green-50 border border-green-200 text-green-800{% endif %}">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        {% if category == 'error' %}
+                                            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                            </svg>
+                                        {% else %}
+                                            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                            </svg>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium">{{ message }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Update Public Key Form -->
+            <form action="/update_public_key" method="POST" enctype="multipart/form-data" class="space-y-6">
+                {{ form.hidden_tag() }}
+
+                <div>
+                    <label for="{{ form.username.id }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.username.label.text }}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.username(class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                    </div>
+                    {% if form.username.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.username.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.password.id }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.password.label.text }}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.password(class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm", placeholder="Enter your password") }}
+                    </div>
+                    {% if form.password.description %}
+                        <p class="mt-1 text-xs text-gray-500">{{ form.password.description }}</p>
+                    {% endif %}
+                    {% if form.password.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.password.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.confirm.id }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.confirm.label.text }}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.confirm(class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm", placeholder="Confirm your password") }}
+                    </div>
+                    {% if form.confirm.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.confirm.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="border-t border-gray-200 pt-6">
+                    <label for="{{ form.public_key.id }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.public_key.label.text }}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.public_key(class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100") }}
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500">
+                        Upload your RSA public key in PEM format (.pem or .key file)
+                    </p>
+                    {% if form.public_key.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.public_key.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="pt-4">
+                    {{ form.submit(class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer transition-colors") }}
+                </div>
+            </form>
+
+            <!-- Warning Notice -->
+            <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                            Important Warning
+                        </h3>
+                        <div class="mt-2 text-xs text-red-700">
+                            <p>Updating your public key will affect encrypted communications. Make sure you:</p>
+                            <ul class="list-disc list-inside mt-1 space-y-1">
+                                <li>Have the corresponding private key saved securely</li>
+                                <li>Understand this will be used for all future encrypted messages</li>
+                                <li>Keep your private key safe and never share it</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How to Generate Key -->
+            <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800">
+                            Need to generate a key pair?
+                        </h3>
+                        <div class="mt-2 text-xs text-blue-700">
+                            <p class="font-mono bg-white p-2 rounded border border-blue-300 mt-1">
+                                openssl genrsa -out private.pem 4096<br>
+                                openssl rsa -in private.pem -pubout -out public.pem
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back to Dashboard -->
+            <div class="mt-6 text-center">
+                <a href="/dashboard" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+                    ← Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}

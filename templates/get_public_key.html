@@ -1,0 +1,12 @@
+{% extends "base.html"}
+{% block title}Public Key{% endblock %}
+{% block head}{% endblock %}
+{% block content %}
+{% if error %}
+<p class="error">{{ error }}</p>
+{% endif %}
+<form action=# method="POST">
+	<input type=text value="{{ username if username }}" placeholder="Search username" required />
+	<input type=submit value="{{ submit if submit }}" />
+</form>
+{% endblock %}

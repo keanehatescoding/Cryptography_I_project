@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}My Encrypted Files{% endblock %}
+{% block head %}
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1000px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        h2 { color: #333; }
+        #loadKeyBtn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        #loadKeyBtn:hover { background: #218838; }
+        #loadKeyBtn:disabled { background: #6c757d; cursor: not-allowed; }
+        
+        .file-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .file-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .file-name {
+            font-weight: bold;
+            font-size: 18px;
+            color: #007bff;
+        }
+        .file-meta {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .file-content {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .file-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        
+        .status {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+        .encrypted-badge {
+            background: #ffc107;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .decrypted-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+    {% endblock %}
+{% block content %}
+ <h2>My Encrypted Files</h2>
+    
+    <button id="loadKeyBtn">Load My Private Key</button>
+    <input type="file" id="privateKeyPicker" style="display:none" accept=".pem">
+    
+    <div id="status"></div>
+    <div id="filesContainer"></div>
+{% endblock %}

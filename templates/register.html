@@ -1,0 +1,94 @@
+<!--  register.html -->
+{% extends "base.html" %}
+{% block title %}SignUp - Create an Account{% endblock %}
+{% block head %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 class="text-center text-3xl font-bold text-gray-900">
+            Create your account
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            Or
+            <a href="/login" class="font-medium text-blue-600 hover:text-blue-500">
+                sign in to your existing account
+            </a>
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border border-gray-200">
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mb-6">
+                        {% for category, message in messages %}
+                            <div class="rounded-md p-4 mb-3 {% if category == 'error' %}bg-red-50 border border-red-200 text-red-800{% else %}bg-green-50 border border-green-200 text-green-800{% endif %}">
+                                <p class="text-sm font-medium">{{ message }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Registration Form -->
+            <form action="/register" method="POST" enctype="multipart/form-data" class="space-y-6">
+                {{ form.hidden_tag() }}
+
+                <div>
+                    <label for="{{ form.username.id }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.username.label.text }}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.username(class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.password.id }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.password.label.text }}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.password(class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.confirm.id }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.confirm.label.text }}
+                    </label>
+                    <div class="mt-1">
+                        {{ form.confirm(class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.public_key.id }}" class="block text-sm font-medium text-gray-700">
+                        {{ form.public_key.label.text }}
+                        <span class="text-xs font-normal text-gray-500 block"> For encrypted messaging</span>
+                    </label>
+                    <div class="mt-1">
+                        {{ form.public_key(class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm", rows="4") }}
+                    </div>
+                </div>
+
+                <div>
+                    {{ form.submit(class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer") }}
+                </div>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-600">
+                    Already have an account?
+                    <a href="/login" class="font-medium text-blue-600 hover:text-blue-500">
+                        Log in here
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}

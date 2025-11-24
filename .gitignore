@@ -1,0 +1,6 @@
+.env
+*.pub
+*.enc
+instance/
+uploads/
+certs/
