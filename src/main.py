@@ -49,7 +49,6 @@ STORAGE_DIR = os.path.join(BASE_DIR, "storage")
 CERT_DIR = os.path.join(BASE_DIR, "certs")
 DATABASE_PATH = os.path.join(BASE_DIR, "users.db")
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
-print(os.environ["SQLALCHEMY_DATABASE_URI"])
 app.config.update(
     static_folder=STATIC_DIR,
     SECRET_KEY=os.environ["SECRET_KEY"],
@@ -59,7 +58,7 @@ app.config.update(
     STORAGE_FOLDER=STORAGE_DIR,
     ENCRYPTED_STORAGE=f"{STORAGE_DIR}/encrypted_files",
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
-    DEBUG=True,
+    DEBUG=os.environ.get("DEBUG", "").strip().lower() in ("1", "true", "yes"),
     MAX_CONTENT_LENGTH=50 * 1024 * 1024,  # 50MB
     MAX_PUBLIC_KEY_SIZE=10 * 1024,  # 10KB for public keys
     PORT=os.environ.get("PORT", 5000),
@@ -75,7 +74,9 @@ limiter = Limiter(
     storage_uri="memory://",
     default_limits=["1000/day", "100/hour"],
 )
-socketio = SocketIO(app, manage_session=False, cors_allowed_origins="*")
+# Cross-origin Socket.IO clients are denied unless explicitly allowed.
+_cors_origins = [o.strip() for o in os.environ.get("SOCKETIO_CORS_ORIGINS", "").split(",") if o.strip()]
+socketio = SocketIO(app, manage_session=False, cors_allowed_origins=_cors_origins or None)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 app.config["SESSION_SQLALCHEMY"] = db

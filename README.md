@@ -103,16 +103,20 @@ uv sync
 Create a .env in the root directory
 
 ```text
-SECRET_KEY=your_flask_secret_key_here  # Generate with: python -c "import secrets; print(secrets.token_hex(16))"
-SQLALCHEMY_DATABASE_URI=sqlite:///users.db  # Or your preferred SQLite path
+SECRET_KEY=your_flask_secret_key_here  # Generate with: python -c "import secrets; print(secrets.token_hex(32))"
+SQLALCHEMY_DATABASE_URI=users.db  # SQLite file name, relative to the project root
 PORT=5000  # Default port
 MONGO_URI=mongodb://localhost:27017/  # Default local MongoDB
+# Optional. DEBUG is off unless set to 1/true/yes. Never enable it on a public interface.
+# DEBUG=1
+# Optional. Comma-separated browser origins allowed to use Socket.IO. Denied by default.
+# SOCKETIO_CORS_ORIGINS=https://app.example.com
 ```
 
 Generate a secure SECRET_KEY:
 
 ```bash
-python -c "import secrets; print(secrets.token_hex(16))"
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 5.Set up MongoDB Start MongoDB service:
