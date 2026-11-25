@@ -278,7 +278,10 @@ def show_send_file():
 @csrf.exempt
 @login_required
 def send_enc_file():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return {"success": False, "error": "invalid or missing JSON body"}, 400
+
     required = [
         "recipient",
         "filename",
@@ -292,7 +295,7 @@ def send_enc_file():
     if not Users.query.filter_by(username=data["recipient"]).first():
         return {"success": False, "error": "recipient not found"}, 404
     if current_user.username == data["recipient"]:
-        return {"succes": False, "error": "cannot send file to yourself"}, 500
+        return {"success": False, "error": "cannot send file to yourself"}, 400
     stored = secure_filename(
         f"{current_user.username}_{data['filename']}__{os.urandom(8).hex()}.enc"
     )
@@ -374,9 +377,16 @@ def get_reusable_key():
 @login_required
 @csrf.exempt
 def publish_reusable_aes_key():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return {"success": False, "error": "invalid or missing JSON body"}, 400
+
+    required = ["recipient", "wrapped_for_sender", "wrapped_for_recipient"]
+    if not all(k in data for k in required):
+        return {"success": False, "error": "missing fields"}, 400
+
     if current_user.username == data["recipient"]:
-        return {"success": False, "error": "Cannot publish a key for yourself"}, 500
+        return {"success": False, "error": "Cannot publish a key for yourself"}, 400
     aes_keys_col.update_one(
         {"sender": current_user.username, "recipient": data["recipient"]},
         {
